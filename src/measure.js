@@ -68,7 +68,7 @@ function measureDistancesSquare(segments, options) {
 	  else if (direction.y === 0) {
 			for (let x = current.x;x !== end.x;x += direction.x) {
 				const cost = costFunction(x + direction.x, current.y, options)
-				distance += cost * canvas.dimensions.distance
+				distance += cost * canvas.dimensions.distance + eucl_surcharge * canvas.dimensions.distance //Veifel: Add surcharge for Euclidean movement
 				ray.terrainRulerVisitedSpaces.push({x: x + direction.x, y: current.y, distance})
 			}
 		}
@@ -97,7 +97,7 @@ function measureDistancesSquare(segments, options) {
 						debugStep(current.x, current.y, 0x008800)
 					const cost = costFunction(current.x, current.y, options)
 					//distance += cost * canvas.dimensions.distance
-					distance += cost * canvas.dimensions.distance + eucl_surcharge //Veifel: Add surcharge for Euclidean movement
+					distance += cost * canvas.dimensions.distance + eucl_surcharge * canvas.dimensions.distance //Veifel: Add surcharge for Euclidean movement
 
 					// Diagonal Handling
 					if (isDiagonal) {
@@ -126,7 +126,7 @@ function measureDistancesSquare(segments, options) {
 			// Move along the x axis until the target is reached
 			for (let x = current.x;x !== end.x;x += direction.x) {
 				const cost = costFunction(x + direction.x, current.y, options)
-				distance += cost * canvas.dimensions.distance + eucl_surcharge //Veifel: Add surcharge for Euclidean movement
+				distance += cost * canvas.dimensions.distance + eucl_surcharge * canvas.dimensions.distance //Veifel: Add surcharge for Euclidean movement
 				ray.terrainRulerVisitedSpaces.push({x: x + direction.x, y: current.y, distance})
 			}
 		}

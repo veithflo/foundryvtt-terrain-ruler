@@ -44,6 +44,17 @@ function measureDistancesSquare(segments, options) {
 		const direction = {x: Math.sign(end.x - start.x), y: Math.sign(end.y - start.y)}
 		const current = start
 		let distance = 0
+  
+	  //Veifel: Calculate surcharge for Euclidean movement according to current segment
+		let nx = Math.abs(end.x - start.x);
+		let ny = Math.abs(end.y - start.y);
+		let ns = Math.abs(ny - nx);
+		let nd = Math.min(nx, ny);
+		let distance_555 = nd + ns;
+		let distance_5010 = Math.floor(nd / 2) + nd + ns;
+		let distance_eucl = Math.hypot(nx,ny);
+		let eucl_surcharge = 0;
+		if (canvas.grid.diagonalRule === "EUCL") eucl_surcharge = distance_eucl / distance_555 - 1;
 
 		// If the ruler is vertical just move along the y axis until we reach our goal
 		if (direction.x === 0) {
@@ -53,9 +64,15 @@ function measureDistancesSquare(segments, options) {
 				ray.terrainRulerVisitedSpaces.push({x: current.x, y: y + direction.y, distance})
 			}
 		}
+		// If the ruler is horizontal just move along the x axis until we reach our goal
+	  else if (direction.y === 0) {
+			for (let x = current.x;x !== end.x;x += direction.x) {
+				const cost = costFunction(x + direction.x, current.y, options)
+				distance += cost * canvas.dimensions.distance
+				ray.terrainRulerVisitedSpaces.push({x: x + direction.x, y: current.y, distance})
+			}
+		}
 		else {
-			// If the ruler is horizontal we skip calculating diagonals
-			if (direction.y !== 0) {
 				// To handle rulers that are neither horizontal nor vertical we always move along the y axis until the
 				// line of the ruler intersects the next vertical grid line. Then we move one step to the right and continue
 				const line = Line.fromPoints(pixelsToDecimalGridPosition(ray.A), pixelsToDecimalGridPosition(ray.B));
@@ -79,7 +96,8 @@ function measureDistancesSquare(segments, options) {
 					if (CONFIG.debug.terrainRuler)
 						debugStep(current.x, current.y, 0x008800)
 					const cost = costFunction(current.x, current.y, options)
-					distance += cost * canvas.dimensions.distance
+					//distance += cost * canvas.dimensions.distance
+					distance += cost * canvas.dimensions.distance + eucl_surcharge //Veifel: Add surcharge for Euclidean movement
 
 					// Diagonal Handling
 					if (isDiagonal) {
@@ -101,16 +119,14 @@ function measureDistancesSquare(segments, options) {
 							// Apply the cost for the diagonals
 							distance += diagonalCost * canvas.dimensions.distance
 						}
-						// If neither of the above match treat diagonals as regular steps (5/5/5 rule)
+					// If neither of the above match treat diagonals as regular steps (5/5/5 rule)
 					}
 					ray.terrainRulerVisitedSpaces.push({x: current.x, y: current.y, distance})
 				}
-			}
-
 			// Move along the x axis until the target is reached
 			for (let x = current.x;x !== end.x;x += direction.x) {
 				const cost = costFunction(x + direction.x, current.y, options)
-				distance += cost * canvas.dimensions.distance
+				distance += cost * canvas.dimensions.distance + eucl_surcharge //Veifel: Add surcharge for Euclidean movement
 				ray.terrainRulerVisitedSpaces.push({x: x + direction.x, y: current.y, distance})
 			}
 		}
